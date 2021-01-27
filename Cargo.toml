@@ -1,0 +1,18 @@
+[package]
+name = "xim_connect"
+version = "0.1.0"
+authors = ["Ivan Meredith <ivan@ivan.net.nz>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+web-view = { git = "https://github.com/Boscop/web-view", features = ["edge"] }
+num_enum = "0.5.1"
+widestring = "0.4.0"
+lazy_static = "1.3.0"
+serde_json = { version = "1.0" } 
+
+[dependencies.winapi]
+version = "0.3"
+features = ["winuser", "winbase", "libloaderapi", "hidusage", "errhandlingapi"]
