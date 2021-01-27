@@ -1,20 +1,19 @@
-use crate::xim::{XIMManager, XIMEvent};
 use crate::config::Config;
 use crate::window;
-use winapi::shared::windef::HWND;
-use std::thread;
-use std::sync::mpsc::{Sender, Receiver, channel};
+use crate::xim::{XIMEvent, XIMManager};
+use std::sync::mpsc::{channel, Receiver, Sender};
 use std::sync::Arc;
+use std::thread;
+use winapi::shared::windef::HWND;
 
 pub enum ManagerEvent {
-    WindowCreated(i32)
+    WindowCreated(i32),
 }
 pub struct Manager {
     xim: Arc<XIMManager>,
     config: Config,
-    overlay_hwnd: Option<i32>,    
+    overlay_hwnd: Option<i32>,
 }
-
 
 impl Manager {
     pub fn start() {
@@ -25,13 +24,17 @@ impl Manager {
         };
         let (tx, rx) = channel::<ManagerEvent>();
         let (xim_tx, xim_rx) = channel::<XIMEvent>();
-        
+
         let handler = manager.process_raw_input(&xim_tx, &tx);
 
         handler.join();
     }
 
-    pub fn process_raw_input(&self, xim_tx: &Sender<XIMEvent>, manager_tx: &Sender<ManagerEvent>) -> thread::JoinHandle<()> {
+    pub fn process_raw_input(
+        &self,
+        xim_tx: &Sender<XIMEvent>,
+        manager_tx: &Sender<ManagerEvent>,
+    ) -> thread::JoinHandle<()> {
         let tx = xim_tx.clone();
         let tx1 = manager_tx.clone();
         thread::spawn(move || window::process_events(tx, tx1))

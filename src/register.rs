@@ -1,16 +1,19 @@
 use winapi::{
-  shared::{
-        hidusage::{HID_USAGE_GENERIC_MOUSE,HID_USAGE_GENERIC_KEYBOARD,HID_USAGE_PAGE_GENERIC},
+    shared::{
+        hidusage::{HID_USAGE_GENERIC_KEYBOARD, HID_USAGE_GENERIC_MOUSE, HID_USAGE_PAGE_GENERIC},
         minwindef::{DWORD, HINSTANCE, LPARAM, LPVOID, LRESULT, PUINT, UINT, WPARAM},
         windef::HWND,
-    },   
-    um::winuser::{RAWINPUTDEVICE, RIDEV_INPUTSINK, RegisterRawInputDevices, RIDEV_CAPTUREMOUSE, RIDEV_NOLEGACY , RIDEV_REMOVE}
+    },
+    um::winuser::{
+        RegisterRawInputDevices, RAWINPUTDEVICE, RIDEV_CAPTUREMOUSE, RIDEV_INPUTSINK,
+        RIDEV_NOLEGACY, RIDEV_REMOVE,
+    },
 };
 
 use std::mem;
 
 fn make_raw_input_devices(hwnd: HWND) -> Vec<RAWINPUTDEVICE> {
-    let mouse =  RAWINPUTDEVICE {
+    let mouse = RAWINPUTDEVICE {
         usUsagePage: HID_USAGE_PAGE_GENERIC,
         usUsage: HID_USAGE_GENERIC_MOUSE,
         dwFlags: RIDEV_INPUTSINK | RIDEV_NOLEGACY | RIDEV_CAPTUREMOUSE,
@@ -26,7 +29,7 @@ fn make_raw_input_devices(hwnd: HWND) -> Vec<RAWINPUTDEVICE> {
     vec![mouse, keyboard]
 }
 fn make_remove_raw_input_devices() -> Vec<RAWINPUTDEVICE> {
-    let mouse =  RAWINPUTDEVICE {
+    let mouse = RAWINPUTDEVICE {
         usUsagePage: HID_USAGE_PAGE_GENERIC,
         usUsage: HID_USAGE_GENERIC_MOUSE,
         dwFlags: RIDEV_REMOVE,
@@ -37,7 +40,7 @@ fn make_remove_raw_input_devices() -> Vec<RAWINPUTDEVICE> {
         usUsagePage: HID_USAGE_PAGE_GENERIC,
         usUsage: HID_USAGE_GENERIC_KEYBOARD,
         dwFlags: RIDEV_REMOVE,
-        hwndTarget:  std::ptr::null_mut(),
+        hwndTarget: std::ptr::null_mut(),
     };
     vec![mouse, keyboard]
 }
