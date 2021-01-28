@@ -34,9 +34,8 @@ lazy_static! {
 
 pub unsafe fn proc_raw_input(hWnd: HWND, l_param: LPARAM) -> bool {
     let mut pcb_size = 0;
-    let tx =
-        std::ptr::read(GetWindowLongPtrW(hWnd, GWLP_USERDATA) as *const Arc<window::WindowData>)
-            .clone();
+    let tx =(GetWindowLongPtrW(hWnd, GWLP_USERDATA) as *const Arc<window::WindowData>);
+            
 
     let is_mouse_move_relative = |ri: RAWINPUT| {
         ri.header.dwType == RIM_TYPEMOUSE && ri.data.mouse().usFlags == MOUSE_MOVE_RELATIVE
@@ -61,9 +60,9 @@ pub unsafe fn proc_raw_input(hWnd: HWND, l_param: LPARAM) -> bool {
                 _ => xim::ButtonEvent::ButtonReleased,
             };
             let key = keyboard.VKey as i32;
-
+            let mut vec = Vec::new();
             if pressed != xim::ButtonEvent::NOOP {
-                tx.xim_tx.send(xim::XIMEvent::KeyboardButton(
+               vec.push(xim::XIMEvent::KeyboardButton(
                     u16::try_from(key).unwrap(),
                     pressed,
                 ));
@@ -71,8 +70,7 @@ pub unsafe fn proc_raw_input(hWnd: HWND, l_param: LPARAM) -> bool {
 
             let mouse = ri.data.mouse();
 
-            tx.xim_tx
-                .send(xim::XIMEvent::MouseButtonEvent(mouse.usButtonFlags));
+            vec.push(xim::XIMEvent::MouseButtonEvent(mouse.usButtonFlags));
             if is_mouse_move_relative(ri) {
                 let wheel = if mouse.usButtonFlags & RI_MOUSE_WHEEL == RI_MOUSE_WHEEL {
                     ((transmute_copy::<u16, i16>(&mouse.usButtonData) as f32) / 120f32) as i16
@@ -83,13 +81,14 @@ pub unsafe fn proc_raw_input(hWnd: HWND, l_param: LPARAM) -> bool {
                 let x = i16::try_from(mouse.lLastX).unwrap_or(0);
                 let y = i16::try_from(mouse.lLastY).unwrap_or(0);
 
-                tx.xim_tx.send(xim::XIMEvent::MouseMoveEvent {
+                vec.push(xim::XIMEvent::MouseMoveEvent {
                     x: x,
                     y: y,
                     wheel: wheel,
                 });
                 res = true;
             }
+            (*tx).xim_tx.send(vec);
         }
 
         dealloc(data, layout);

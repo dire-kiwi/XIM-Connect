@@ -41,6 +41,7 @@ lazy_static! {
     static ref WINDOW_NAME: U16CString = U16CString::from_str("W10dWheel/R_WM").unwrap();
 }
 static mut HOTKEY_ACTIVE: bool = false;
+
 fn make_window_class(h_instance: HINSTANCE) -> WNDCLASSEXW {
     WNDCLASSEXW {
         cbSize: (mem::size_of::<WNDCLASSEXW>()) as UINT,
@@ -123,6 +124,29 @@ unsafe extern "system" fn window_proc(
     DefWindowProcW(hwnd, msg, w_param, l_param)
 }
 
+unsafe fn create_window() -> HWND {
+    let h_instance = GetModuleHandleW(ptr::null());
+    let window_class = make_window_class(h_instance);
+    
+    if RegisterClassExW(&window_class) != 0 {
+        let hwnd = CreateWindowExW(
+            WS_EX_LAYERED | WS_EX_TOOLWINDOW,
+            CLASS_NAME.as_ptr(),
+            WINDOW_NAME.as_ptr(),
+            WS_OVERLAPPEDWINDOW,
+            CW_USEDEFAULT,
+            CW_USEDEFAULT,
+            CW_USEDEFAULT,
+            CW_USEDEFAULT,
+            ptr::null_mut(),
+            ptr::null_mut(),
+            h_instance,
+            ptr::null_mut(),
+        );
+        return hwnd;
+    }
+    return 0 as HWND;
+}
 unsafe fn message_loop(msg: LPMSG) {
     loop {
         if GetMessageW(msg, ptr::null_mut(), 0, 0) == 0 {
@@ -138,29 +162,13 @@ unsafe fn message_loop(msg: LPMSG) {
 #[allow(non_snake_case)]
 #[derive(Debug, Clone)]
 pub struct WindowData {
-    pub xim_tx: Sender<xim::XIMEvent>,
+    pub xim_tx: Sender<Vec<xim::XIMEvent>>,
     pub manager_tx: Sender<ManagerEvent>,
 }
 
-pub fn process_events(xim_tx: Sender<xim::XIMEvent>, manager_tx: Sender<ManagerEvent>) {
+pub fn process_events(xim_tx: Sender<Vec<xim::XIMEvent>>, manager_tx: Sender<ManagerEvent>) {
     unsafe {
-        let h_instance = GetModuleHandleW(ptr::null());
-        let window_class = make_window_class(h_instance);
-        if RegisterClassExW(&window_class) != 0 {
-            let hwnd = CreateWindowExW(
-                WS_EX_LAYERED | WS_EX_TOOLWINDOW,
-                CLASS_NAME.as_ptr(),
-                WINDOW_NAME.as_ptr(),
-                WS_OVERLAPPEDWINDOW,
-                CW_USEDEFAULT,
-                CW_USEDEFAULT,
-                CW_USEDEFAULT,
-                CW_USEDEFAULT,
-                ptr::null_mut(),
-                ptr::null_mut(),
-                h_instance,
-                ptr::null_mut(),
-            );
+            let hwnd = create_window();
             let userdata = Arc::new(WindowData {
                 xim_tx: xim_tx,
                 manager_tx: manager_tx,
@@ -182,4 +190,3 @@ pub fn process_events(xim_tx: Sender<xim::XIMEvent>, manager_tx: Sender<ManagerE
             dealloc(msg, layout);
         }
     }
-}

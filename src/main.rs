@@ -1,11 +1,11 @@
 #[macro_use]
 extern crate lazy_static;
-mod config;
-mod hook;
 mod input;
-mod manager;
-mod register;
 mod xim;
+mod manager;
+mod hook;
+mod register;
+mod config;
 use std::thread;
 mod window;
 
